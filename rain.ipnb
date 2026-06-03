@@ -1,0 +1,183 @@
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+     
+
+df = pd.read_csv("weather_rainfall.csv")
+df.head()
+     
+Temperature	Humidity	Rainfall
+0	30.48	65	1
+1	27.31	73	1
+2	31.24	98	1
+3	35.62	95	1
+4	26.83	98	1
+
+df.shape
+     
+(500, 3)
+
+df.isnull().sum()
+     
+0
+Temperature	0
+Humidity	0
+Rainfall	0
+
+dtype: int64
+
+df.info()
+     
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 500 entries, 0 to 499
+Data columns (total 3 columns):
+ #   Column       Non-Null Count  Dtype  
+---  ------       --------------  -----  
+ 0   Temperature  500 non-null    float64
+ 1   Humidity     500 non-null    int64  
+ 2   Rainfall     500 non-null    int64  
+dtypes: float64(1), int64(2)
+memory usage: 11.8 KB
+
+df.describe()
+     
+Temperature	Humidity	Rainfall
+count	500.000000	500.000000	500.000000
+mean	28.034280	69.078000	0.390000
+std	4.906385	17.412936	0.488238
+min	11.790000	40.000000	0.000000
+25%	24.497500	53.000000	0.000000
+50%	28.065000	69.000000	0.000000
+75%	31.185000	85.000000	1.000000
+max	47.260000	99.000000	1.000000
+
+df.fillna(df.mean(numeric_only=True), inplace=True)
+df.head()
+     
+Temperature	Humidity	Rainfall
+0	30.48	65	1
+1	27.31	73	1
+2	31.24	98	1
+3	35.62	95	1
+4	26.83	98	1
+
+df.Rainfall.value_counts()
+df.Rainfall.value_counts().plot(
+    kind='pie',
+    autopct='%1.0f%%',
+    startangle=90
+)
+
+plt.title("Rainfall Yes vs No")
+plt.ylabel("")
+plt.show()
+     
+
+
+df.Rainfall.value_counts().plot(kind="bar", color=["blue","orange"])
+plt.show()
+     
+
+
+sns.distplot(df['Humidity'])
+     
+/tmp/ipykernel_671/4017267088.py:1: UserWarning: 
+
+`distplot` is a deprecated function and will be removed in seaborn v0.14.0.
+
+Please adapt your code to use either `displot` (a figure-level function with
+similar flexibility) or `histplot` (an axes-level function for histograms).
+
+For a guide to updating your code to use the new functions, please see
+https://gist.github.com/mwaskom/de44147ed2974457ad6372750bbe5751
+
+  sns.distplot(df['Humidity'])
+<Axes: xlabel='Humidity', ylabel='Density'>
+
+
+df.hist(figsize=(14,14))
+plt.show()
+     
+
+
+sns.pairplot(df,hue='Rainfall')
+     
+<seaborn.axisgrid.PairGrid at 0x7c634150fc50>
+
+
+sns.scatterplot(x=df['Humidity'], y=df['Rainfall'])
+plt.title("Humidity vs Rainfall")
+plt.show()
+     
+
+
+df.boxplot(figsize=(14,7))
+     
+<Axes: >
+
+
+X = df.drop('Rainfall',axis=1)
+Y = df['Rainfall']
+     
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X,Y,test_size=0.2,random_state=101,shuffle=True)
+     
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score,confusion_matrix
+
+dt = DecisionTreeClassifier(
+    criterion='gini',
+    min_samples_split=10,
+    splitter='best'
+)
+
+dt.fit(X_train,Y_train)
+
+prediction = dt.predict(X_test)
+
+accuracy_dt = accuracy_score(Y_test,prediction)*100
+accuracy_dt
+     
+83.0
+
+print("Accuracy on training set: {:.3f}".format(dt.score(X_train, Y_train)))
+print("Accuracy on test set: {:.3f}".format(dt.score(X_test, Y_test)))
+     
+Accuracy on training set: 0.927
+Accuracy on test set: 0.830
+
+print("Feature importances:\n{}".format(dt.feature_importances_))
+     
+Feature importances:
+[0.17204647 0.82795353]
+
+confusion_matrix(Y_test,prediction)
+     
+array([[52,  7],
+       [10, 31]])
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(metric='manhattan', n_neighbors=22)
+
+knn.fit(X_train,Y_train)
+
+prediction_knn = knn.predict(X_test)
+
+accuracy_knn = accuracy_score(Y_test,prediction_knn)*100
+
+print("Accuracy:",accuracy_knn)
+     
+Accuracy: 88.0
+
+confusion_matrix(Y_test,prediction_knn)
+     
+array([[56,  3],
+       [ 9, 32]])
